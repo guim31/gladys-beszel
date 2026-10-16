@@ -1,8 +1,8 @@
 {
-  "name": "gladys-integration-template-js",
+  "name": "gladys-beszel",
   "version": "1.0.0",
   "private": true,
-  "description": "Official starter template to build an external integration for Gladys Assistant with the JavaScript SDK.",
+  "description": "Gladys Assistant integration for Beszel: your monitored systems, their Beszel alerts, a widget and scene actions.",
   "type": "module",
   "main": "index.js",
   "scripts": {

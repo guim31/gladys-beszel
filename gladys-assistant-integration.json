@@ -1,177 +1,912 @@
 {
   "manifest_version": 1,
   "type": "device",
-  "name": "Demo Devices Template",
+  "name": "Beszel",
   "description": {
-    "en": "Starter template showing sensors, a switch, a dimmable light and a smart plug.",
-    "fr": "Template de démarrage : capteurs, interrupteur, lampe variable et prise connectée."
+    "en": "Your Beszel systems in Gladys: online, CPU, memory, disk, temperature and alerts.",
+    "fr": "Vos systèmes Beszel dans Gladys : en ligne, processeur, mémoire, disque, température et alertes.",
+    "de": "Deine Beszel-Systeme in Gladys: online, Prozessor, Speicher, Datenträger, Temperatur, Alarme.",
+    "es": "Sus sistemas Beszel en Gladys: en línea, procesador, memoria, disco, temperatura y alertas."
   },
   "version": "1.0.0",
-  "docker_image": "ghcr.io/gladysassistant/integration-template-js:1.0.0",
+  "docker_image": "ghcr.io/guim31/gladys-beszel:1.0.0",
   "gladys_version": ">=5.1.0",
-  "cover_image": "https://raw.githubusercontent.com/GladysAssistant/integration-template-js/master/cover.png",
-  "categories": ["lighting", "security", "environment"],
-  "transports": ["local", "cloud"],
+  "cover_image": "https://raw.githubusercontent.com/guim31/gladys-beszel/main/cover.png",
+  "categories": ["network"],
+  "transports": ["local"],
   "config_schema": [
     {
       "key": "intro",
       "type": "section",
-      "label": { "en": "Getting started", "fr": "Pour commencer" },
+      "label": {
+        "en": "Your Beszel hub",
+        "fr": "Votre hub Beszel",
+        "de": "Dein Beszel-Hub",
+        "es": "Su hub Beszel"
+      },
       "description": {
-        "en": "The demo weather station reads real data from the free Open-Meteo API: pick the coordinates to observe. No account, no API key.",
-        "fr": "La station météo de démonstration lit de vraies données via l'API gratuite Open-Meteo : choisissez les coordonnées à observer. Pas de compte, pas de clé d'API."
+        "en": "Enter the address of your Beszel hub and the email and password of a Beszel user: every system this user sees becomes a device. A read-only user is enough. Then add the systems you want from the Discover tab.",
+        "fr": "Saisissez l'adresse de votre hub Beszel, puis l'e-mail et le mot de passe d'un utilisateur Beszel : chaque système qu'il voit devient un appareil. Un utilisateur en lecture seule suffit. Ajoutez ensuite les systèmes voulus depuis l'onglet Découverte.",
+        "de": "Gib die Adresse deines Beszel-Hubs sowie E-Mail und Passwort eines Beszel-Benutzers ein: Jedes System, das dieser Benutzer sieht, wird ein Gerät. Ein Benutzer mit Lesezugriff genügt. Füge dann im Tab „Entdecken“ die gewünschten Systeme hinzu.",
+        "es": "Introduzca la dirección de su hub Beszel y el correo electrónico y la contraseña de un usuario de Beszel: cada sistema que vea este usuario se convierte en un dispositivo. Basta con un usuario de solo lectura. Añada luego los sistemas que quiera desde la pestaña Descubrir."
       },
       "links": [
         {
-          "url": "https://open-meteo.com/en/docs",
-          "label": { "en": "Open-Meteo documentation", "fr": "Documentation Open-Meteo" }
+          "url": "https://github.com/guim31/gladys-beszel/blob/main/docs/en.md",
+          "label": {
+            "en": "Setup guide",
+            "fr": "Guide d'installation",
+            "de": "Installationsanleitung",
+            "es": "Guía de instalación"
+          }
         }
       ]
     },
     {
-      "key": "latitude",
-      "type": "number",
-      "label": { "en": "Latitude", "fr": "Latitude" },
-      "description": {
-        "en": "Latitude used for the demo weather sensor.",
-        "fr": "Latitude utilisée par le capteur météo de démonstration."
+      "key": "hub_url",
+      "type": "string",
+      "label": {
+        "en": "Beszel address",
+        "fr": "Adresse de Beszel",
+        "de": "Beszel-Adresse",
+        "es": "Dirección de Beszel"
       },
-      "placeholder": { "en": "e.g. 48.8566", "fr": "ex. 48.8566" },
-      "required": true,
-      "default": 48.8566,
-      "min": -90,
-      "max": 90
-    },
-    {
-      "key": "longitude",
-      "type": "number",
-      "label": { "en": "Longitude", "fr": "Longitude" },
-      "description": {
-        "en": "Longitude used for the demo weather sensor.",
-        "fr": "Longitude utilisée par le capteur météo de démonstration."
-      },
-      "placeholder": { "en": "e.g. 2.3522", "fr": "ex. 2.3522" },
-      "required": true,
-      "default": 2.3522,
-      "min": -180,
-      "max": 180
-    },
-    {
-      "key": "unit",
-      "type": "select",
-      "label": { "en": "Temperature unit", "fr": "Unité de température" },
       "required": false,
-      "default": "celsius",
+      "placeholder": {
+        "en": "192.168.1.20",
+        "fr": "192.168.1.20",
+        "de": "192.168.1.20",
+        "es": "192.168.1.20"
+      },
+      "description": {
+        "en": "Address of the Beszel hub, the one of its web page (port 8090 by default): 192.168.1.20, nas.lan or https://beszel.example.com.",
+        "fr": "Adresse du hub Beszel, celle de sa page web (port 8090 par défaut) : 192.168.1.20, nas.lan ou https://beszel.example.com.",
+        "de": "Adresse des Beszel-Hubs, die seiner Weboberfläche (standardmäßig Port 8090): 192.168.1.20, nas.lan oder https://beszel.example.com.",
+        "es": "Dirección del hub Beszel, la de su página web (puerto 8090 por defecto): 192.168.1.20, nas.lan o https://beszel.example.com."
+      }
+    },
+    {
+      "key": "email",
+      "type": "string",
+      "label": {
+        "en": "Email of the Beszel user",
+        "fr": "E-mail de l'utilisateur Beszel",
+        "de": "E-Mail des Beszel-Benutzers",
+        "es": "Correo del usuario de Beszel"
+      },
+      "required": false,
+      "placeholder": {
+        "en": "gladys@example.com",
+        "fr": "gladys@example.com",
+        "de": "gladys@example.com",
+        "es": "gladys@example.com"
+      },
+      "description": {
+        "en": "Best: a user created for Gladys, with the read-only role, with whom the systems are shared.",
+        "fr": "Le mieux : un utilisateur créé pour Gladys, au rôle lecture seule, avec qui les systèmes sont partagés.",
+        "de": "Am besten: ein eigener Benutzer für Gladys mit der Rolle „Nur lesen“, mit dem die Systeme geteilt sind.",
+        "es": "Lo mejor: un usuario creado para Gladys, con el rol de solo lectura, con quien se comparten los sistemas."
+      }
+    },
+    {
+      "key": "password",
+      "type": "secret",
+      "label": {
+        "en": "Password",
+        "fr": "Mot de passe",
+        "de": "Passwort",
+        "es": "Contraseña"
+      },
+      "required": false,
+      "description": {
+        "en": "Kept by Gladys, sent only to the Beszel hub.",
+        "fr": "Gardé par Gladys, envoyé seulement au hub Beszel.",
+        "de": "Wird von Gladys gespeichert und nur an den Beszel-Hub gesendet.",
+        "es": "Guardada por Gladys, solo se envía al hub Beszel."
+      }
+    },
+    {
+      "key": "options",
+      "type": "section",
+      "label": {
+        "en": "Options",
+        "fr": "Options",
+        "de": "Optionen",
+        "es": "Opciones"
+      }
+    },
+    {
+      "key": "poll_interval",
+      "type": "select",
+      "label": {
+        "en": "Refresh interval",
+        "fr": "Intervalle de rafraîchissement",
+        "de": "Aktualisierungsintervall",
+        "es": "Intervalo de actualización"
+      },
+      "description": {
+        "en": "How often the Beszel hub is read. The hub itself refreshes each system once a minute.",
+        "fr": "Fréquence de lecture du hub Beszel. Le hub rafraîchit lui-même chaque système une fois par minute.",
+        "de": "Wie oft der Beszel-Hub gelesen wird. Der Hub selbst aktualisiert jedes System einmal pro Minute.",
+        "es": "Con qué frecuencia se lee el hub Beszel. El propio hub actualiza cada sistema una vez por minuto."
+      },
+      "required": false,
+      "default": "30",
       "options": [
-        { "value": "celsius", "label": { "en": "Celsius", "fr": "Celsius" } },
-        { "value": "fahrenheit", "label": { "en": "Fahrenheit", "fr": "Fahrenheit" } }
+        {
+          "value": "30",
+          "label": {
+            "en": "30 seconds",
+            "fr": "30 secondes",
+            "de": "30 Sekunden",
+            "es": "30 segundos"
+          }
+        },
+        {
+          "value": "60",
+          "label": {
+            "en": "1 minute",
+            "fr": "1 minute",
+            "de": "1 Minute",
+            "es": "1 minuto"
+          }
+        },
+        {
+          "value": "120",
+          "label": {
+            "en": "2 minutes",
+            "fr": "2 minutes",
+            "de": "2 Minuten",
+            "es": "2 minutos"
+          }
+        },
+        {
+          "value": "300",
+          "label": {
+            "en": "5 minutes",
+            "fr": "5 minutes",
+            "de": "5 Minuten",
+            "es": "5 minutos"
+          }
+        }
       ]
     },
     {
-      "key": "poll_frequency",
-      "type": "number",
-      "label": { "en": "Refresh interval (s)", "fr": "Intervalle de rafraîchissement (s)" },
+      "key": "allow_self_signed",
+      "type": "boolean",
+      "label": {
+        "en": "Accept self-signed certificates",
+        "fr": "Accepter les certificats auto-signés",
+        "de": "Selbstsignierte Zertifikate akzeptieren",
+        "es": "Aceptar certificados autofirmados"
+      },
       "description": {
-        "en": "How often sensors are polled, in seconds (one minute minimum).",
-        "fr": "Fréquence d'interrogation des capteurs, en secondes (une minute minimum)."
+        "en": "Only for an https:// address (Beszel behind a reverse proxy) whose certificate your browser does not trust either.",
+        "fr": "Seulement pour une adresse en https:// (Beszel derrière un proxy inverse) dont votre navigateur ne reconnaît pas non plus le certificat.",
+        "de": "Nur für eine https://-Adresse (Beszel hinter einem Reverse-Proxy), deren Zertifikat auch dein Browser nicht anerkennt.",
+        "es": "Solo para una dirección https:// (Beszel detrás de un proxy inverso) cuyo certificado tampoco reconoce su navegador."
       },
       "required": false,
-      "default": 300,
-      "min": 60,
-      "max": 3600
+      "default": false
+    },
+    {
+      "key": "language",
+      "type": "select",
+      "label": {
+        "en": "Language of the names",
+        "fr": "Langue des noms",
+        "de": "Sprache der Namen",
+        "es": "Idioma de los nombres"
+      },
+      "description": {
+        "en": "Language of the feature names (set when a device is added), of the scene results and of the connection test.",
+        "fr": "Langue des noms des fonctionnalités (fixés à l'ajout d'un appareil), des résultats de scène et du test de connexion.",
+        "de": "Sprache der Funktionsnamen (beim Hinzufügen eines Geräts festgelegt), der Szenen-Ergebnisse und des Verbindungstests.",
+        "es": "Idioma de los nombres de las funciones (fijados al añadir un dispositivo), de los resultados de escena y de la prueba de conexión."
+      },
+      "required": false,
+      "default": "fr",
+      "options": [
+        {
+          "value": "en",
+          "label": {
+            "en": "English",
+            "fr": "English",
+            "de": "English",
+            "es": "English"
+          }
+        },
+        {
+          "value": "fr",
+          "label": {
+            "en": "Français",
+            "fr": "Français",
+            "de": "Français",
+            "es": "Français"
+          }
+        },
+        {
+          "value": "de",
+          "label": {
+            "en": "Deutsch",
+            "fr": "Deutsch",
+            "de": "Deutsch",
+            "es": "Deutsch"
+          }
+        },
+        {
+          "value": "es",
+          "label": {
+            "en": "Español",
+            "fr": "Español",
+            "de": "Español",
+            "es": "Español"
+          }
+        }
+      ]
     }
   ],
   "actions": [
     {
-      "key": "test_weather",
-      "label": { "en": "Test the weather provider", "fr": "Tester le fournisseur météo" },
-      "timeout_seconds": 30
-    },
-    {
-      "key": "identify",
-      "label": { "en": "Identify a device", "fr": "Identifier un appareil" },
-      "fields": [
-        {
-          "key": "device",
-          "type": "select",
-          "source": "devices",
-          "label": { "en": "Device", "fr": "Appareil" },
-          "required": true
-        }
-      ]
+      "key": "test_connection",
+      "label": {
+        "en": "Test the connection",
+        "fr": "Tester la connexion",
+        "de": "Verbindung testen",
+        "es": "Probar la conexión"
+      },
+      "description": {
+        "en": "Reads the Beszel hub now and says what it found.",
+        "fr": "Lit maintenant le hub Beszel et dit ce qu'il a trouvé.",
+        "de": "Liest jetzt den Beszel-Hub und sagt, was gefunden wurde.",
+        "es": "Lee ahora el hub Beszel e indica lo que ha encontrado."
+      },
+      "timeout_seconds": 60
     }
   ],
   "scene_triggers": [
     {
-      "key": "motion_detected",
-      "label": { "en": "Motion detected", "fr": "Mouvement détecté" },
+      "key": "system_status_changed",
+      "label": {
+        "en": "Beszel system offline or back",
+        "fr": "Système Beszel hors ligne ou revenu",
+        "de": "Beszel-System offline oder zurück",
+        "es": "Sistema Beszel sin conexión o de vuelta"
+      },
       "description": {
-        "en": "A demo motion sensor saw a person or an animal move.",
-        "fr": "Un détecteur de démonstration a vu bouger une personne ou un animal."
+        "en": "Beszel marks a system down (its agent no longer answers), or up again.",
+        "fr": "Beszel marque un système hors ligne (son agent ne répond plus), ou de nouveau en ligne.",
+        "de": "Beszel markiert ein System als offline (sein Agent antwortet nicht mehr) oder wieder als online.",
+        "es": "Beszel marca un sistema como sin conexión (su agente ya no responde) o de nuevo en línea."
       },
       "fields": [
         {
-          "key": "device",
+          "key": "system",
           "type": "select",
           "source": "devices",
-          "label": { "en": "Sensor", "fr": "Détecteur" }
+          "label": {
+            "en": "System",
+            "fr": "Système",
+            "de": "System",
+            "es": "Sistema"
+          },
+          "description": {
+            "en": "A Beszel system. Empty: every system, added to Gladys or not.",
+            "fr": "Un système Beszel. Vide : tous les systèmes, ajoutés à Gladys ou non.",
+            "de": "Ein Beszel-System. Leer: alle Systeme, ob zu Gladys hinzugefügt oder nicht.",
+            "es": "Un sistema Beszel. Vacío: todos los sistemas, añadidos a Gladys o no."
+          }
         },
         {
-          "key": "target",
-          "type": "multi_select",
-          "label": { "en": "What moved", "fr": "Ce qui a bougé" },
+          "key": "status",
+          "type": "select",
+          "label": {
+            "en": "New state",
+            "fr": "Nouvel état",
+            "de": "Neuer Zustand",
+            "es": "Nuevo estado"
+          },
+          "description": {
+            "en": "Empty: both.",
+            "fr": "Vide : les deux.",
+            "de": "Leer: beides.",
+            "es": "Vacío: ambos."
+          },
           "options": [
-            { "value": "person", "label": { "en": "Person", "fr": "Personne" } },
-            { "value": "animal", "label": { "en": "Animal", "fr": "Animal" } }
+            {
+              "value": "down",
+              "label": {
+                "en": "Offline",
+                "fr": "Hors ligne",
+                "de": "Offline",
+                "es": "Sin conexión"
+              }
+            },
+            {
+              "value": "up",
+              "label": {
+                "en": "Back online",
+                "fr": "De nouveau en ligne",
+                "de": "Wieder online",
+                "es": "De nuevo en línea"
+              }
+            }
           ]
         }
       ],
       "variables": [
         {
-          "key": "target",
+          "key": "system_name",
           "type": "string",
-          "label": { "en": "What moved", "fr": "Ce qui a bougé" }
+          "label": {
+            "en": "System",
+            "fr": "Système",
+            "de": "System",
+            "es": "Sistema"
+          }
+        },
+        {
+          "key": "status_label",
+          "type": "string",
+          "label": {
+            "en": "New state",
+            "fr": "Nouvel état",
+            "de": "Neuer Zustand",
+            "es": "Nuevo estado"
+          }
+        }
+      ]
+    },
+    {
+      "key": "alert_status_changed",
+      "label": {
+        "en": "Beszel alert",
+        "fr": "Alerte Beszel",
+        "de": "Beszel-Alarm",
+        "es": "Alerta Beszel"
+      },
+      "description": {
+        "en": "A Beszel alert of the configured user is triggered or resolved (CPU, memory, disk, temperature…).",
+        "fr": "Une alerte Beszel de l'utilisateur configuré se déclenche ou se résout (processeur, mémoire, disque, température…).",
+        "de": "Ein Beszel-Alarm des konfigurierten Benutzers wird ausgelöst oder behoben (Prozessor, Speicher, Datenträger, Temperatur …).",
+        "es": "Una alerta Beszel del usuario configurado se activa o se resuelve (procesador, memoria, disco, temperatura…)."
+      },
+      "fields": [
+        {
+          "key": "system",
+          "type": "select",
+          "source": "devices",
+          "label": {
+            "en": "System",
+            "fr": "Système",
+            "de": "System",
+            "es": "Sistema"
+          },
+          "description": {
+            "en": "A Beszel system. Empty: every system, added to Gladys or not.",
+            "fr": "Un système Beszel. Vide : tous les systèmes, ajoutés à Gladys ou non.",
+            "de": "Ein Beszel-System. Leer: alle Systeme, ob zu Gladys hinzugefügt oder nicht.",
+            "es": "Un sistema Beszel. Vacío: todos los sistemas, añadidos a Gladys o no."
+          }
+        },
+        {
+          "key": "alert",
+          "type": "select",
+          "label": {
+            "en": "Alert",
+            "fr": "Alerte",
+            "de": "Alarm",
+            "es": "Alerta"
+          },
+          "description": {
+            "en": "Empty: every alert.",
+            "fr": "Vide : toutes les alertes.",
+            "de": "Leer: alle Alarme.",
+            "es": "Vacío: todas las alertas."
+          },
+          "options": [
+            {
+              "value": "Status",
+              "label": {
+                "en": "Status",
+                "fr": "Statut",
+                "de": "Status",
+                "es": "Estado"
+              }
+            },
+            {
+              "value": "CPU",
+              "label": {
+                "en": "CPU",
+                "fr": "Processeur",
+                "de": "Prozessor",
+                "es": "Procesador"
+              }
+            },
+            {
+              "value": "Memory",
+              "label": {
+                "en": "Memory",
+                "fr": "Mémoire",
+                "de": "Arbeitsspeicher",
+                "es": "Memoria"
+              }
+            },
+            {
+              "value": "Disk",
+              "label": {
+                "en": "Disk",
+                "fr": "Disque",
+                "de": "Datenträger",
+                "es": "Disco"
+              }
+            },
+            {
+              "value": "Temperature",
+              "label": {
+                "en": "Temperature",
+                "fr": "Température",
+                "de": "Temperatur",
+                "es": "Temperatura"
+              }
+            },
+            {
+              "value": "Bandwidth",
+              "label": {
+                "en": "Bandwidth",
+                "fr": "Bande passante",
+                "de": "Bandbreite",
+                "es": "Ancho de banda"
+              }
+            },
+            {
+              "value": "GPU",
+              "label": {
+                "en": "GPU",
+                "fr": "GPU",
+                "de": "GPU",
+                "es": "GPU"
+              }
+            },
+            {
+              "value": "LoadAvg1",
+              "label": {
+                "en": "Load (1 min)",
+                "fr": "Charge (1 min)",
+                "de": "Last (1 Min.)",
+                "es": "Carga (1 min)"
+              }
+            },
+            {
+              "value": "LoadAvg5",
+              "label": {
+                "en": "Load (5 min)",
+                "fr": "Charge (5 min)",
+                "de": "Last (5 Min.)",
+                "es": "Carga (5 min)"
+              }
+            },
+            {
+              "value": "LoadAvg15",
+              "label": {
+                "en": "Load (15 min)",
+                "fr": "Charge (15 min)",
+                "de": "Last (15 Min.)",
+                "es": "Carga (15 min)"
+              }
+            },
+            {
+              "value": "Battery",
+              "label": {
+                "en": "Battery",
+                "fr": "Batterie",
+                "de": "Akku",
+                "es": "Batería"
+              }
+            },
+            {
+              "value": "ContainerHealth",
+              "label": {
+                "en": "Container health",
+                "fr": "Santé des conteneurs",
+                "de": "Container-Zustand",
+                "es": "Salud de los contenedores"
+              }
+            },
+            {
+              "value": "SystemdFailed",
+              "label": {
+                "en": "Failed services",
+                "fr": "Services en échec",
+                "de": "Fehlgeschlagene Dienste",
+                "es": "Servicios con error"
+              }
+            },
+            {
+              "value": "CPUIOWait",
+              "label": {
+                "en": "CPU I/O wait",
+                "fr": "Attente E/S du processeur",
+                "de": "E/A-Wartezeit",
+                "es": "Espera de E/S"
+              }
+            },
+            {
+              "value": "CPUSteal",
+              "label": {
+                "en": "CPU steal",
+                "fr": "Vol de processeur",
+                "de": "CPU-Steal",
+                "es": "Robo de CPU"
+              }
+            },
+            {
+              "value": "NetworkMonitorLoss",
+              "label": {
+                "en": "Network monitor loss",
+                "fr": "Pertes de la sonde réseau",
+                "de": "Verluste der Netzwerkprüfung",
+                "es": "Pérdidas del monitor de red"
+              }
+            }
+          ]
+        },
+        {
+          "key": "state",
+          "type": "select",
+          "label": {
+            "en": "New state",
+            "fr": "Nouvel état",
+            "de": "Neuer Zustand",
+            "es": "Nuevo estado"
+          },
+          "description": {
+            "en": "Empty: both.",
+            "fr": "Vide : les deux.",
+            "de": "Leer: beides.",
+            "es": "Vacío: ambos."
+          },
+          "options": [
+            {
+              "value": "triggered",
+              "label": {
+                "en": "Triggered",
+                "fr": "Déclenchée",
+                "de": "Ausgelöst",
+                "es": "Activada"
+              }
+            },
+            {
+              "value": "resolved",
+              "label": {
+                "en": "Resolved",
+                "fr": "Résolue",
+                "de": "Behoben",
+                "es": "Resuelta"
+              }
+            }
+          ]
+        }
+      ],
+      "variables": [
+        {
+          "key": "system_name",
+          "type": "string",
+          "label": {
+            "en": "System",
+            "fr": "Système",
+            "de": "System",
+            "es": "Sistema"
+          }
+        },
+        {
+          "key": "alert_label",
+          "type": "string",
+          "label": {
+            "en": "Alert",
+            "fr": "Alerte",
+            "de": "Alarm",
+            "es": "Alerta"
+          }
+        },
+        {
+          "key": "alert_text",
+          "type": "string",
+          "label": {
+            "en": "Alert and threshold",
+            "fr": "Alerte et seuil",
+            "de": "Alarm und Schwelle",
+            "es": "Alerta y umbral"
+          }
+        },
+        {
+          "key": "state_label",
+          "type": "string",
+          "label": {
+            "en": "New state",
+            "fr": "Nouvel état",
+            "de": "Neuer Zustand",
+            "es": "Nuevo estado"
+          }
+        },
+        {
+          "key": "threshold",
+          "type": "number",
+          "label": {
+            "en": "Threshold",
+            "fr": "Seuil",
+            "de": "Schwelle",
+            "es": "Umbral"
+          }
         }
       ]
     }
   ],
   "scene_actions": [
     {
-      "key": "identify_device",
-      "label": { "en": "Identify a device", "fr": "Identifier un appareil" },
-      "description": {
-        "en": "Make a device signal itself (the demo light blinks).",
-        "fr": "Fait se signaler un appareil (la lampe de démonstration clignote)."
+      "key": "get_system_status",
+      "label": {
+        "en": "State of a Beszel system",
+        "fr": "État d'un système Beszel",
+        "de": "Zustand eines Beszel-Systems",
+        "es": "Estado de un sistema Beszel"
       },
-      "timeout_seconds": 15,
+      "description": {
+        "en": "Reads a system for the next actions: online, CPU, memory, disk, temperature, alerts, and a ready-made summary.",
+        "fr": "Lit un système pour les actions suivantes : en ligne, processeur, mémoire, disque, température, alertes, et un résumé prêt à envoyer.",
+        "de": "Liest ein System für die nächsten Aktionen: online, Prozessor, Speicher, Datenträger, Temperatur, Alarme und eine fertige Zusammenfassung.",
+        "es": "Lee un sistema para las acciones siguientes: en línea, procesador, memoria, disco, temperatura, alertas y un resumen listo para enviar."
+      },
+      "timeout_seconds": 30,
       "fields": [
         {
-          "key": "device",
+          "key": "system",
           "type": "select",
           "source": "devices",
-          "label": { "en": "Device", "fr": "Appareil" },
-          "required": true
+          "required": true,
+          "label": {
+            "en": "System",
+            "fr": "Système",
+            "de": "System",
+            "es": "Sistema"
+          },
+          "description": {
+            "en": "A Beszel system.",
+            "fr": "Un système Beszel.",
+            "de": "Ein Beszel-System.",
+            "es": "Un sistema Beszel."
+          }
         }
       ],
       "outputs": [
         {
-          "key": "signalled",
+          "key": "name",
+          "type": "string",
+          "label": {
+            "en": "System name",
+            "fr": "Nom du système",
+            "de": "Systemname",
+            "es": "Nombre del sistema"
+          }
+        },
+        {
+          "key": "online",
           "type": "boolean",
-          "label": { "en": "Device signalled", "fr": "Appareil signalé" }
+          "label": {
+            "en": "Online",
+            "fr": "En ligne",
+            "de": "Online",
+            "es": "En línea"
+          }
+        },
+        {
+          "key": "status",
+          "type": "string",
+          "label": {
+            "en": "State",
+            "fr": "État",
+            "de": "Zustand",
+            "es": "Estado"
+          }
+        },
+        {
+          "key": "summary",
+          "type": "string",
+          "label": {
+            "en": "Summary",
+            "fr": "Résumé",
+            "de": "Zusammenfassung",
+            "es": "Resumen"
+          }
+        },
+        {
+          "key": "cpu",
+          "type": "number",
+          "label": {
+            "en": "CPU (%)",
+            "fr": "Processeur (%)",
+            "de": "Prozessor (%)",
+            "es": "Procesador (%)"
+          }
+        },
+        {
+          "key": "memory",
+          "type": "number",
+          "label": {
+            "en": "Memory (%)",
+            "fr": "Mémoire (%)",
+            "de": "Arbeitsspeicher (%)",
+            "es": "Memoria (%)"
+          }
+        },
+        {
+          "key": "disk",
+          "type": "number",
+          "label": {
+            "en": "Disk (%)",
+            "fr": "Disque (%)",
+            "de": "Datenträger (%)",
+            "es": "Disco (%)"
+          }
+        },
+        {
+          "key": "temperature",
+          "type": "number",
+          "label": {
+            "en": "Highest temperature (°C)",
+            "fr": "Température la plus haute (°C)",
+            "de": "Höchste Temperatur (°C)",
+            "es": "Temperatura más alta (°C)"
+          }
+        },
+        {
+          "key": "network_mbps",
+          "type": "number",
+          "label": {
+            "en": "Network traffic (Mbit/s)",
+            "fr": "Trafic réseau (Mbit/s)",
+            "de": "Netzwerkverkehr (Mbit/s)",
+            "es": "Tráfico de red (Mbit/s)"
+          }
+        },
+        {
+          "key": "load_1",
+          "type": "number",
+          "label": {
+            "en": "Load (1 min)",
+            "fr": "Charge (1 min)",
+            "de": "Last (1 Min.)",
+            "es": "Carga (1 min)"
+          }
+        },
+        {
+          "key": "uptime_days",
+          "type": "number",
+          "label": {
+            "en": "Uptime (days)",
+            "fr": "Durée de fonctionnement (jours)",
+            "de": "Laufzeit (Tage)",
+            "es": "Tiempo en marcha (días)"
+          }
+        },
+        {
+          "key": "alerts_triggered",
+          "type": "number",
+          "label": {
+            "en": "Triggered alerts",
+            "fr": "Alertes déclenchées",
+            "de": "Ausgelöste Alarme",
+            "es": "Alertas activadas"
+          }
+        }
+      ]
+    },
+    {
+      "key": "get_overview",
+      "label": {
+        "en": "State of every Beszel system",
+        "fr": "État de tous les systèmes Beszel",
+        "de": "Zustand aller Beszel-Systeme",
+        "es": "Estado de todos los sistemas Beszel"
+      },
+      "description": {
+        "en": "Counts the systems online and offline and the triggered alerts, with a ready-made summary.",
+        "fr": "Compte les systèmes en ligne et hors ligne et les alertes déclenchées, avec un résumé prêt à envoyer.",
+        "de": "Zählt die Systeme online und offline und die ausgelösten Alarme, mit einer fertigen Zusammenfassung.",
+        "es": "Cuenta los sistemas en línea y sin conexión y las alertas activadas, con un resumen listo para enviar."
+      },
+      "timeout_seconds": 30,
+      "outputs": [
+        {
+          "key": "count",
+          "type": "number",
+          "label": {
+            "en": "Systems",
+            "fr": "Systèmes",
+            "de": "Systeme",
+            "es": "Sistemas"
+          }
+        },
+        {
+          "key": "online",
+          "type": "number",
+          "label": {
+            "en": "Online",
+            "fr": "En ligne",
+            "de": "Online",
+            "es": "En línea"
+          }
+        },
+        {
+          "key": "offline",
+          "type": "number",
+          "label": {
+            "en": "Offline",
+            "fr": "Hors ligne",
+            "de": "Offline",
+            "es": "Sin conexión"
+          }
+        },
+        {
+          "key": "alerts_triggered",
+          "type": "number",
+          "label": {
+            "en": "Triggered alerts",
+            "fr": "Alertes déclenchées",
+            "de": "Ausgelöste Alarme",
+            "es": "Alertas activadas"
+          }
+        },
+        {
+          "key": "summary",
+          "type": "string",
+          "label": {
+            "en": "Summary",
+            "fr": "Résumé",
+            "de": "Zusammenfassung",
+            "es": "Resumen"
+          }
         }
       ]
     }
   ],
   "widgets": [
     {
-      "key": "demo_status",
-      "label": { "en": "Demo status", "fr": "État de la démo" },
-      "description": {
-        "en": "Live temperature and plug power, plug connection and observed location.",
-        "fr": "Température et puissance en direct, connexion de la prise, position observée."
+      "key": "systems",
+      "label": {
+        "en": "Beszel systems",
+        "fr": "Systèmes Beszel",
+        "de": "Beszel-Systeme",
+        "es": "Sistemas Beszel"
       },
-      "icon": "activity",
-      "action_timeout_seconds": 15
+      "icon": "server",
+      "description": {
+        "en": "Your systems and their Beszel alerts at a glance, or the gauges and alerts of one system.",
+        "fr": "Vos systèmes et leurs alertes Beszel d'un coup d'œil, ou les jauges et alertes d'un système.",
+        "de": "Deine Systeme und ihre Beszel-Alarme auf einen Blick oder Anzeigen und Alarme eines Systems.",
+        "es": "Sus sistemas y sus alertas Beszel de un vistazo, o los indicadores y alertas de un sistema."
+      },
+      "settings": [
+        {
+          "key": "system",
+          "type": "select",
+          "source": "devices",
+          "label": {
+            "en": "System",
+            "fr": "Système",
+            "de": "System",
+            "es": "Sistema"
+          },
+          "description": {
+            "en": "Empty: every system. Otherwise the gauges and alerts of the chosen system.",
+            "fr": "Vide : tous les systèmes. Sinon, les jauges et alertes du système choisi.",
+            "de": "Leer: alle Systeme. Sonst die Anzeigen und Alarme des gewählten Systems.",
+            "es": "Vacío: todos los sistemas. Si no, los indicadores y alertas del sistema elegido."
+          },
+          "required": false
+        }
+      ],
+      "action_timeout_seconds": 30
     }
   ]
 }

@@ -1,0 +1,51 @@
+{
+  "items": [
+    {
+      "id": "knkkkk3pt4sepf9",
+      "info": {
+        "ct": 1,
+        "u": 670120,
+        "cpu": 48.22,
+        "mp": 56.47,
+        "dp": 80.44,
+        "os": 0,
+        "bb": 113,
+        "jl": false,
+        "t": 4,
+        "v": "0.21.0",
+        "p": false,
+        "dt": 95,
+        "la": [5.84, 4.99, 2.93]
+      },
+      "status": "up",
+      "updated": "2026-10-16 13:42:31.043Z",
+      "name": "agent-one"
+    },
+    {
+      "info": {
+        "ct": 0,
+        "u": 0,
+        "mp": 0,
+        "v": "",
+        "g": 0,
+        "bb": 0,
+        "jl": false,
+        "t": 0,
+        "cpu": 0,
+        "dp": 0,
+        "p": false,
+        "dt": 0,
+        "os": 0,
+        "la": [0, 0, 0]
+      },
+      "name": "ghost",
+      "id": "31asvrl7j1f024u",
+      "status": "down",
+      "updated": "2026-10-16 13:43:09.481Z"
+    }
+  ],
+  "page": 1,
+  "perPage": 500,
+  "totalItems": -1,
+  "totalPages": -1
+}
