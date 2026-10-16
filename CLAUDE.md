@@ -234,7 +234,10 @@ code de ce dépôt. Compléter ce fichier quand un nouveau piège est découvert
   n'en fait pas et ne publie rien. C'est Beszel qui décide du `down` (environ une minute après la
   perte de l'agent, vérifié). L'alerte Beszel « Status » se déclenche en même temps, avec son propre
   délai (`min`).
-- **Alertes** : `triggered` passe à `true` quand le seuil `value` est dépassé pendant `min` minutes ;
+- **Alertes** : `triggered` passe à `true` quand le seuil `value` est dépassé pendant `min` minutes
+  (**en dessous** pour `Battery`, logique inversée de Beszel ; `Status`, `SystemdFailed` et
+  `ContainerHealth` sont binaires, leur `value` est ignorée ; `NetworkMonitorLoss` nomme sa sonde
+  dans `monitor_name`) ;
   `value` est le **seuil**, pas la mesure (même dans `alerts_history`). Une alerte supprimée pendant
   qu'elle est déclenchée ne fait pas d'événement « résolue ».
 - **Pourquoi pas le temps réel** (`/api/realtime`, SSE) : le hub ne rafraîchit un système qu'une fois
@@ -242,6 +245,12 @@ code de ce dépôt. Compléter ce fichier quand un nouveau piège est découvert
 - **Erreurs** : le port SSH d'un agent (45876) répond hors HTTP (`HPE_*`, « pas un hub Beszel ») ;
   HTTPS sur le port HTTP donne `EPROTO` (injoignable) ; un chemin sans hub derrière un PocketBase
   répond 404 JSON (« pas un hub Beszel »).
+- **Relecture indépendante (16/10/2026)**, corrigé et figé par des tests : texte des alertes Batterie
+  (`<`) et binaires (sans seuil) ; une lecture en cours abandonnée dès qu'une reconfiguration arrive
+  (deux hubs mélangés sinon) ; un autre utilisateur sur le même hub repart de zéro, sans événement
+  (ses alertes ne sont pas celles de l'ancien) ; la Découverte n'est jamais publiée avant une
+  première lecture réussie (sinon vidée à chaque redémarrage pendant une panne) ; la sortie `status`
+  d'une action dit « Inconnu » quand le hub ne répond pas.
 
 ## Vérifié sur un vrai Beszel
 

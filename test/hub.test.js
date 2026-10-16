@@ -354,3 +354,44 @@ test('the scene actions: state of a system, of every system, an unknown device',
   assert.equal(unknown.success, false);
   assert.match(unknown.error, /not a system of the configured Beszel hub/);
 });
+
+test('another user on the same hub starts from scratch, without false events', async (t) => {
+  const world = await started(t);
+  world.beszel.setTriggered(ALERT_MEMORY, true);
+  await world.fake.configUpdated({ ...CONFIG, email: 'other@example.com' });
+  world.beszel.password = 'other';
+  // The new user is refused here; once accepted, its alerts are a first sight.
+  assert.equal(world.fake.sceneEvents.length, 0);
+  assert.equal(world.hub.systems.size, 0);
+});
+
+test('Gladys restarting while the hub is down keeps the Discover tab', async (t) => {
+  const clock = createClock();
+  const beszel = new FakeBeszel({ now: clock.now });
+  beszel.failure = 'down';
+  const world = await started(t, { clock, beszel });
+  assert.equal(world.fake.discoveredDevices.length, 0);
+  assert.ok(!world.fake.requests.some((request) => request.path === '/discovered_device'));
+  beszel.failure = null;
+  await world.hub.pollAll();
+  assert.equal(world.fake.discoveredDevices.length, 2);
+  beszel.failure = 'down';
+  await world.hub.resync(world.hub.config);
+  assert.equal(world.fake.discoveredDevices.length, 2, 'not replaced by an empty list');
+  const state = (
+    await world.fake.sceneAction('get_system_status', { system: systemId(world.gladys) })
+  ).data.outputs;
+  assert.equal(state.status, 'Unknown');
+  assert.equal(state.online, false);
+});
+
+test('a reconfiguration during a read drops what the old read would have saved', async (t) => {
+  const world = await started(t);
+  world.beszel.setStatus(SYSTEM_UP, 'down');
+  const read = world.hub.poll();
+  await world.fake.configUpdated({ ...CONFIG, hub_url: '198.51.100.20' });
+  await read;
+  assert.equal(world.hub.systems.size, 0);
+  assert.deepEqual(world.hub.saved, {});
+  assert.equal(events(world, TRIGGERS.STATUS).length, 0);
+});

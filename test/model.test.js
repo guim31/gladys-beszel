@@ -96,3 +96,16 @@ test('the client tells apart a web page, a PocketBase without users, a TLS error
     kind: ERROR_KINDS.CREDENTIALS_MISSING,
   });
 });
+
+test('an alert in words: above, below for a battery, no threshold when binary', async () => {
+  const { alertText } = await import('../src/texts.js');
+  const alert = (name, threshold, monitor = null) => ({ name, threshold, monitor });
+  assert.equal(alertText(alert('CPU', 80), 'en'), 'CPU > 80%');
+  assert.equal(alertText(alert('Battery', 20), 'fr'), 'Batterie < 20 %');
+  assert.equal(alertText(alert('SystemdFailed', 0), 'en'), 'Failed services');
+  assert.equal(alertText(alert('ContainerHealth', 3), 'de'), 'Container-Zustand');
+  assert.equal(
+    alertText(alert('NetworkMonitorLoss', 5, 'router'), 'en'),
+    'Network monitor loss > 5% (router)',
+  );
+});

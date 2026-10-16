@@ -94,7 +94,7 @@ export class BeszelHub {
     this.signature = null;
     this.client = null;
     /** Hub read state: { error, readAt, polling } */
-    this.link = { error: null, readAt: 0, polling: null };
+    this.link = { error: null, readAt: 0, okAt: 0, polling: null };
     /** @type {Map<string, object>} system states, by record id */
     this.systems = new Map();
     /**
@@ -134,12 +134,12 @@ export class BeszelHub {
 
   async reconfigure(config) {
     const languageChanged = this.config?.language !== config.language;
-    const previousUrl = this.config?.url;
+    const previous = this.config;
     this.config = config;
     if (this.signature !== signature(config)) {
       this.signature = signature(config);
       clearTimeout(this.retryTimer);
-      this.link = { error: null, readAt: 0, polling: null };
+      this.link = { error: null, readAt: 0, okAt: 0, polling: null };
       this.client = config.url
         ? new BeszelClient({
             url: config.url,
@@ -150,8 +150,9 @@ export class BeszelHub {
             now: this.now,
           })
         : null;
-      if (previousUrl !== undefined && previousUrl !== config.url) {
-        // Another hub: its systems are other systems, announced from scratch.
+      if (previous && (previous.url !== config.url || previous.email !== config.email)) {
+        // Another hub, or another user (alerts belong to a user): start again
+        // from scratch, silently.
         this.systems.clear();
         this.saved = {};
         this.store.save({ systems: this.saved });
@@ -244,7 +245,8 @@ export class BeszelHub {
 
   /** Publish the Discovery list when it changed (a system added, a sensor seen…). */
   async publishDevices({ force = false } = {}) {
-    if (!this.client || this.link.readAt === 0 || (this.link.error && !force)) {
+    // Never before a successful read: an empty list would empty the Discover tab.
+    if (!this.client || this.link.okAt === 0 || (this.link.error && !force)) {
       return;
     }
     const devices = this.discoveredDevices();
@@ -362,6 +364,7 @@ export class BeszelHub {
     }
     link.error = null;
     link.readAt = this.now();
+    link.okAt = link.readAt;
     this.issues.ok('systems-limit', 'Systems back under the limit');
 
     let systems = parseSystems(systemItems);
@@ -376,6 +379,10 @@ export class BeszelHub {
     const alerts = parseAlerts(alertItems);
     const seen = new Set();
     for (const [order, parsed] of systems.entries()) {
+      // Reconfigured meanwhile (another hub, another user): drop the rest.
+      if (link !== this.link) {
+        return false;
+      }
       seen.add(parsed.id);
       if (await this.readSystem(parsed, alerts.get(parsed.id) ?? [], order)) {
         changed = true;
@@ -388,6 +395,9 @@ export class BeszelHub {
         this.systems.delete(id);
         changed = true;
       }
+    }
+    if (link !== this.link) {
+      return false;
     }
     this.forgetStale();
     this.store.save({ systems: this.saved });

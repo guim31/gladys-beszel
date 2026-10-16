@@ -90,6 +90,8 @@ export const STATUS_TEXT = {
   down: { en: 'Offline', fr: 'Hors ligne', de: 'Offline', es: 'Sin conexión' },
   paused: { en: 'Paused', fr: 'En pause', de: 'Pausiert', es: 'En pausa' },
   pending: { en: 'Waiting', fr: 'En attente', de: 'Wartet', es: 'En espera' },
+  // The hub does not answer: the state of its systems is not known.
+  unknown: { en: 'Unknown', fr: 'Inconnu', de: 'Unbekannt', es: 'Desconocido' },
 };
 
 // The state of a Beszel alert, in words.
@@ -261,17 +263,22 @@ export const formatPercent = (value, language) =>
 /** A temperature, "52 °C". */
 export const formatCelsius = (value, language) => `${formatNumber(value, language, 0)} °C`;
 
-/** "CPU > 80 %": an alert and its threshold, in words. */
+const BINARY_ALERTS = new Set(['Status', 'SystemdFailed', 'ContainerHealth']);
+
+/** "CPU > 80 %", "Battery < 20 %": an alert and its threshold, in words. */
 export function alertText(alert, language) {
   const label = alertLabel(alert.name, language);
-  if (alert.name === 'Status' || alert.threshold === null) {
-    return label;
+  // Binary alerts: Beszel ignores their value.
+  if (BINARY_ALERTS.has(alert.name) || alert.threshold === null) {
+    return alert.monitor ? `${label} (${alert.monitor})` : label;
   }
   const unit = ALERT_UNITS[alert.name];
   const value = formatNumber(alert.threshold, language, 2);
   const spaced =
     unit === '%' && language === 'en' ? `${value}%` : unit ? `${value} ${unit}` : value;
-  return `${label} > ${spaced}`;
+  // A battery alert fires below its threshold, the others above.
+  const text = `${label} ${alert.name === 'Battery' ? '<' : '>'} ${spaced}`;
+  return alert.monitor ? `${text} (${alert.monitor})` : text;
 }
 
 /** An uptime, "4 d 3 h" / "4 j 3 h" / "4 T 3 Std." / "4 d 3 h". */

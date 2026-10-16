@@ -62,7 +62,7 @@ const PER_PAGE = 500;
 const MAX_PAGES = 4;
 
 export const SYSTEM_FIELDS = 'id,name,status,info,updated';
-export const ALERT_FIELDS = 'id,system,name,value,min,triggered';
+export const ALERT_FIELDS = 'id,system,name,value,min,triggered,monitor_name';
 
 /** The expiry of a PocketBase token (JWT `exp`, in ms), null when unreadable. */
 export function tokenExpiry(token) {

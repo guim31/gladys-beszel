@@ -80,7 +80,7 @@ export const SCENE_ACTIONS = {
     const outputs = {
       name: view.name,
       online: view.online,
-      status: pick(STATUS_TEXT[view.status ?? 'pending'], language),
+      status: pick(STATUS_TEXT[view.status ?? 'unknown'], language),
       alerts_triggered: view.triggered.length,
       summary: summarize(view, language, hubError),
     };

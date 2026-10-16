@@ -101,6 +101,9 @@ export function parseAlerts(items) {
       threshold: num(item.value),
       minutes: num(item.min),
       triggered: item.triggered === true,
+      // A network monitor alert names its probe.
+      monitor:
+        typeof item.monitor_name === 'string' && item.monitor_name ? item.monitor_name : null,
     };
     if (!bySystem.has(item.system)) {
       bySystem.set(item.system, []);
