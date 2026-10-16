@@ -135,6 +135,10 @@ export class BeszelClient {
       if (err.code === 'ERESPONSETOOLARGE') {
         throw new BeszelError(ERROR_KINDS.HTTP, 'Answer too large');
       }
+      // Something answers, but not in HTTP (the SSH port of an agent, 45876).
+      if (typeof err.code === 'string' && err.code.startsWith('HPE_')) {
+        throw new BeszelError(ERROR_KINDS.NOT_BESZEL, `Not HTTP (${err.code})`);
+      }
       throw new BeszelError(ERROR_KINDS.UNREACHABLE, err.code ? `${err.code}` : err.message);
     }
     const { status } = response;

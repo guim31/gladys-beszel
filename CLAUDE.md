@@ -16,8 +16,8 @@ its only runtime dependency. It started from the official JavaScript template.
 ```bash
 npm install
 npm test                                  # node --test, the built-in runner
-node --test test/devices.test.js          # one file
-node --test --test-name-pattern "plug"    # tests whose name matches
+node --test test/hub.test.js              # one file
+node --test --test-name-pattern "alert"   # tests whose name matches
 npm run lint                              # ESLint
 npm run format:check                      # Prettier, as the CI runs it
 npm run format                            # Prettier, fix in place
@@ -32,15 +32,22 @@ pushing.
 
 ```
 index.js                          SDK wiring only: handlers registered before connect()
-src/devices/index.js              registry of the device blueprints + dispatch helpers
-src/devices/<type>.js             one device type per file (buildDevice, onPoll, onSetValue...)
+src/app.js                        registers every SDK handler on the hub (the tests use it too)
+src/hub.js                        the Beszel hub: timer, reads, transitions, states, status
+src/beszel/client.js              PocketBase API of the hub: login, token renewal, lists
+src/beszel/http.js                the one function that talks to the network (test seam)
+src/beszel/model.js               system and alert records -> plain figures (pure)
+src/devices.js                    the device of a system: features, names, values
 src/scenes.js                     scene action handlers (manifest `scene_actions`)
 src/widgets.js                    dashboard widget handlers (manifest `widgets`)
+src/texts.js                      every text sent to Gladys, in en/fr/de/es
+src/store.js                      /data/beszel-state.json (statuses, alerts seen triggered)
+src/logs.js                       one log line per repeated failure, one when it heals
 src/config.js                     DEFAULT_CONFIG (mirrors the manifest defaults) + normalization
-src/weather.js                    example driver (Open-Meteo)
 gladys-assistant-integration.json manifest: name, config_schema, actions, image...
-docs/en.md, docs/fr.md            user documentation, re-hosted by Gladys (mandatory)
+docs/{en,fr,de,es}.md             user documentation, re-hosted by Gladys (en and fr mandatory)
 test/                             node --test, against the SDK's fake Gladys (integration-sdk/testing)
+test/helpers/fakeBeszel.js        in-memory Beszel hub serving test/fixtures/beszel/ (real answers)
 .github/scripts/release.mjs       release helpers (manifest bump, changelog), tested in test/
 ```
 
@@ -70,8 +77,9 @@ test/                             node --test, against the SDK's fake Gladys (in
   `type: "provider"`: 5.1.0). `test/manifest.test.js` ties the manifest to the
   code (defaults, action, scene and widget handlers): change both sides
   together.
-- **User-facing text** is bilingual (English and French): action messages,
-  manifest texts, and `docs/en.md` / `docs/fr.md`, kept in sync.
+- **User-facing text** exists in English, French, German and Spanish: action
+  messages, widget and scene texts, feature names, manifest texts, and
+  `docs/{en,fr,de,es}.md`, kept in sync (`test/i18n.test.js`).
 - **Style.** Prettier formats, ESLint catches mistakes. Comments explain why,
   in English. Tests never touch the network.
 
@@ -197,6 +205,65 @@ code de ce dépôt. Compléter ce fichier quand un nouveau piège est découvert
 - Les filtres de scène ne font qu'égalité et appartenance : un seuil reste le travail d'un capteur.
 - **Les clés de widgets, de déclencheurs et d'actions sont figées une fois publiées.**
 - `gladys_version` `>=5.1.0` dès qu'il y a widgets, déclencheurs ou actions de scène.
+
+## Beszel (API et pièges)
+
+- **API** : celle du hub, PocketBase. `POST /api/collections/users/auth-with-password` (email +
+  mot de passe) donne un JWT (7 jours par défaut, `exp`), renouvelé par `auth-refresh` un jour avant
+  l'échéance. Deux listes par lecture, quel que soit le nombre de systèmes :
+  `systems/records?fields=id,name,status,info,updated` et `alerts/records?fields=…`. Version du hub :
+  `GET /api/beszel/getkey` (champ `v`), qui demande un jeton.
+- **Piège PocketBase, vérifié sur le vrai hub** : une liste lue avec un jeton expiré, faux ou absent
+  répond **200 et une liste vide**, pas 401 (les règles ne trouvent rien). Une liste vide est donc
+  vérifiée par `auth-refresh` (puis reconnexion) avant d'être crue, sinon tous les systèmes
+  disparaîtraient à l'expiration du jeton. Un mauvais mot de passe répond **400** « Failed to
+  authenticate », pas 401.
+- **Droits** : l'utilisateur ne voit que les systèmes dont il est membre (`users` du système), sauf
+  `SHARE_ALL_SYSTEMS=true` sur le hub. Les **alertes appartiennent à un utilisateur** (règle
+  `user = @request.auth.id`) : un utilisateur dédié à Gladys ne voit pas celles du compte principal ;
+  un `readonly` peut créer les siennes. Un superutilisateur PocketBase (`/_/`) n'est pas un
+  utilisateur Beszel.
+- **`info`** d'un système : `cpu`, `mp`, `dp` (%), `dt` (température du tableau de bord, absente sans
+  capteur), `bb` (octets/s envoyés + reçus ; `b` en Mo/s avant 0.12), `la` (charges), `u` (secondes),
+  `sv` ([services, en échec], seulement si systemd est surveillé), `v`. Quand le système n'est pas
+  `up`, le hub **remet `info` à zéro** : rien n'est publié alors, sauf « En ligne » à 0 (statut `down`)
+  et le nombre d'alertes. `g` (GPU) est `omitzero` : il disparaît à 0 %, donc pas de fonctionnalité
+  (une fonctionnalité qui va et vient change la structure). Les fonctionnalités température et
+  services, une fois vues, restent (`known` dans `/data`).
+- **Statuts** : `up`, `down`, `paused`, `pending`. Seuls `up` ↔ `down` font un événement ; une pause
+  n'en fait pas et ne publie rien. C'est Beszel qui décide du `down` (environ une minute après la
+  perte de l'agent, vérifié). L'alerte Beszel « Status » se déclenche en même temps, avec son propre
+  délai (`min`).
+- **Alertes** : `triggered` passe à `true` quand le seuil `value` est dépassé pendant `min` minutes ;
+  `value` est le **seuil**, pas la mesure (même dans `alerts_history`). Une alerte supprimée pendant
+  qu'elle est déclenchée ne fait pas d'événement « résolue ».
+- **Pourquoi pas le temps réel** (`/api/realtime`, SSE) : le hub ne rafraîchit un système qu'une fois
+  par minute ; une lecture toutes les 30 s ne rate rien, sans flux à surveiller et reprendre.
+- **Erreurs** : le port SSH d'un agent (45876) répond hors HTTP (`HPE_*`, « pas un hub Beszel ») ;
+  HTTPS sur le port HTTP donne `EPROTO` (injoignable) ; un chemin sans hub derrière un PocketBase
+  répond 404 JSON (« pas un hub Beszel »).
+
+## Vérifié sur un vrai Beszel
+
+Le 16/10/2026, image Docker de l'intégration lancée avec les contraintes du bac à sable de Gladys
+(`--cap-drop ALL --security-opt no-new-privileges --read-only --memory 256m --pids-limit 256`,
+volume `/data`, réseau en pont `gladys-test-beszel`, aucun port publié) contre `henrygd/beszel` 0.21.0
+et `henrygd/beszel-agent` (sans le socket Docker de l'hôte), un utilisateur `user` et un `readonly`.
+
+- **Sans Gladys** : reconnexion du SDK en backoff, pas de plantage, aucun secret dans les logs,
+  ~19 Mo au repos, arrêt propre sur SIGTERM (code 0).
+- **Client réel** : bon mot de passe, mauvais mot de passe et utilisateur inconnu (`auth`), mot de
+  passe absent, utilisateur `readonly` (un système partagé sur deux), hôte inconnu, port fermé,
+  HTTPS sur le port HTTP, port SSH de l'agent, sous-chemin sans hub, jeton invalidé (liste vide puis
+  `auth-refresh` et reconnexion : les deux systèmes reviennent).
+- **Intégration complète** (faux Gladys du SDK, noms en français) : 2 systèmes découverts, états,
+  badges, widget validé (`validateWidgetContent`) dans les deux modes, deux actions de scène,
+  « Tester la connexion ». Puis, **dans de nouveaux processus** (état gardé dans `/data`) : agent arrêté
+  → « hors ligne » et alerte « Statut » déclenchée ; agent relancé → « de nouveau en ligne », « Statut »
+  résolue et une alerte « Mémoire » (seuil 1 %) déclenchée. Mot de passe jamais transmis à Gladys.
+- Non vérifié : une vraie instance Gladys (rendu du widget, éditeur de scènes, variables dans un
+  message), un hub derrière un proxy inverse HTTPS, un agent avec systemd ou GPU, beaucoup de
+  systèmes.
 
 ## Store
 

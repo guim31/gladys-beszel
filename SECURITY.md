@@ -30,6 +30,20 @@ Gladys before reporting a problem.
 
 In scope: the code of this repository and the Docker image it publishes.
 
+What the integration holds:
+
+- the email and password of a Beszel user, kept by Gladys in the integration
+  configuration (a `secret` field) and sent only to the configured Beszel hub;
+  a user with the read-only role is recommended;
+- the session token of the hub, in memory only, never written to disk nor to
+  the logs;
+- under `/data`, `beszel-state.json`: the last status of each system and the
+  ids of the alerts seen triggered. No secret.
+
+Network: requests to the configured hub only (HTTP or HTTPS, port 8090 by
+default), nothing else, no cloud service.
+
 Out of scope: Gladys Assistant itself (see its
 [security policy](https://github.com/GladysAssistant/Gladys/security/policy)),
-and the third-party services and devices the integration talks to.
+and the third-party services and devices the integration talks to, Beszel
+included.
