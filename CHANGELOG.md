@@ -10,6 +10,8 @@ the notes of the version's GitHub Release.
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-10-16
+
 ### Added
 
 - One device per Beszel system the configured user sees, proposed in the
@@ -30,3 +32,6 @@ the notes of the version's GitHub Release.
   renewed before it expires; refresh every 30 seconds to 5 minutes;
   self-signed certificates accepted on request.
 - Documentation in English, French, German and Spanish.
+
+[Unreleased]: https://github.com/guim31/gladys-beszel/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/guim31/gladys-beszel/releases/tag/v1.0.0
