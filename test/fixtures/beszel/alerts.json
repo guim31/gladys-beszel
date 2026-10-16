@@ -1,0 +1,44 @@
+{
+  "items": [
+    {
+      "name": "Status",
+      "value": 0,
+      "min": 1,
+      "system": "31asvrl7j1f024u",
+      "triggered": false,
+      "updated": "2026-10-16 13:42:58.478Z",
+      "id": "ikmsvz1belc6xxs"
+    },
+    {
+      "id": "sh0t26uc40uy7jx",
+      "min": 1,
+      "system": "knkkkk3pt4sepf9",
+      "value": 1,
+      "name": "CPU",
+      "triggered": true,
+      "updated": "2026-10-16 13:43:31.013Z"
+    },
+    {
+      "min": 1,
+      "system": "knkkkk3pt4sepf9",
+      "triggered": false,
+      "value": 99,
+      "id": "cs57tt6osbgjas6",
+      "name": "Memory",
+      "updated": "2026-10-16 13:42:58.470Z"
+    },
+    {
+      "value": 0,
+      "system": "knkkkk3pt4sepf9",
+      "triggered": false,
+      "id": "urmrwpej7qzcq7n",
+      "min": 1,
+      "name": "Status",
+      "updated": "2026-10-16 13:42:58.463Z"
+    }
+  ],
+  "page": 1,
+  "perPage": 500,
+  "totalItems": -1,
+  "totalPages": -1
+}
